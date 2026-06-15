@@ -3,7 +3,9 @@ project:
   title:        ""      # 8-Channel Phase-Shifted PWM Generator
   author:       ""      # Dhivya G
   discord:      ""      # dhivyeah_ , for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  description:  ""      # **8-channel PWM generator with shared duty cycle, selectable prescaler,
+                        and outputs phase-shifted by 32 counts each — creating a running-light effect for LED chasers
+                        and multi-channel motor control.**
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
 
