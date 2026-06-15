@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Dhivya G
+ * Copyright (c) 2026 Your Name
  * SPDX-License-Identifier: Apache-2.0
  *
  * tt_um_pwm_generator
@@ -137,4 +137,3 @@ module tt_um_pwm_generator (
     wire _unused = &{ena, uio_in[7:2], 1'b0};
 
 endmodule
-
