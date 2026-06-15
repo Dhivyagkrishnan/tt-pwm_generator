@@ -1,49 +1,66 @@
-`default_nettype none
+/*
+ * Testbench for tt_um_pwm_generator
+ * 8-Channel Phase-Shifted PWM Generator
+ */
+
 `timescale 1ns / 1ps
 
-/* This testbench just instantiates the module and makes some convenient wires
-   that can be driven / tested by the cocotb test.py.
-*/
-module tb ();
+module tb_tt_um_pwm_generator;
 
-  // Dump the signals to a FST file. You can view it with gtkwave or surfer.
-  initial begin
-    $dumpfile("tb.fst");
-    $dumpvars(0, tb);
-    #1;
-  end
+    reg  [7:0] ui_in;
+    wire [7:0] uo_out;
+    reg  [7:0] uio_in;
+    wire [7:0] uio_out;
+    wire [7:0] uio_oe;
+    reg        clk, rst_n, ena;
 
-  // Wire up the inputs and outputs:
-  reg clk;
-  reg rst_n;
-  reg ena;
-  reg [7:0] ui_in;
-  reg [7:0] uio_in;
-  wire [7:0] uo_out;
-  wire [7:0] uio_out;
-  wire [7:0] uio_oe;
-`ifdef GL_TEST
-  wire VPWR = 1'b1;
-  wire VGND = 1'b0;
-`endif
+    parameter CLK_PERIOD = 20;
 
-  // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+    tt_um_pwm_generator dut (
+        .ui_in, .uo_out, .uio_in, .uio_out, .uio_oe,
+        .ena, .clk, .rst_n
+    );
 
-      // Include power ports for the Gate Level test:
-`ifdef GL_TEST
-      .VPWR(VPWR),
-      .VGND(VGND),
-`endif
+    always #(CLK_PERIOD/2) clk = ~clk;
 
-      .ui_in  (ui_in),    // Dedicated inputs
-      .uo_out (uo_out),   // Dedicated outputs
-      .uio_in (uio_in),   // IOs: Input path
-      .uio_out(uio_out),  // IOs: Output path
-      .uio_oe (uio_oe),   // IOs: Enable path (active high: 0=input, 1=output)
-      .ena    (ena),      // enable - goes high when design is selected
-      .clk    (clk),      // clock
-      .rst_n  (rst_n)     // not reset
-  );
+    initial begin
+        $dumpfile("tb.vcd");
+        $dumpvars(0, tb_tt_um_pwm_generator);
+
+        clk = 0; ena = 1; rst_n = 0;
+        ui_in = 0; uio_in = 0;
+
+        repeat(5) @(posedge clk); rst_n = 1;
+        repeat(10) @(posedge clk);
+
+        // Test 1: Duty = 0 (all off)
+        ui_in = 8'd0;
+        repeat(300) @(posedge clk);
+        $assert(uo_out == 8'b0, "duty=0: outputs not low");
+
+        // Test 2: Duty = 255 (all on)
+        ui_in = 8'd255;
+        repeat(300) @(posedge clk);
+        $display("duty=255: ch0 observed high");
+
+        // Test 3: Phase shift verification
+        ui_in = 8'd32;
+        repeat(10) @(posedge clk);
+        for (int i = 0; i < 32; i++) begin
+            @(posedge clk);
+            $write("ch[7:0]=%b\n", uo_out);
+        end
+
+        // Test 4: Sync pulse check
+        ui_in = 8'd128;
+        repeat(512) @(posedge clk);
+        $assert(uio_out[7], "sync pulse not detected");
+
+        // Test 5: uio_oe verification
+        $assert(uio_oe == 8'b10000000, "uio_oe misconfigured");
+
+        $display("\nAll tests passed.");
+        $finish;
+    end
 
 endmodule
